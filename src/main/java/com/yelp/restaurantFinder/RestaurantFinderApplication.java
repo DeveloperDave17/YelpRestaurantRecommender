@@ -7,7 +7,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class RestaurantFinderApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(RestaurantFinderApplication.class, args);
+//		SpringApplication.run(RestaurantFinderApplication.class, args);
+		System.out.println("Hello World");
 	}
 
 }
