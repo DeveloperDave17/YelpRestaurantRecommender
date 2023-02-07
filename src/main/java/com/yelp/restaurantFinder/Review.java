@@ -1,4 +1,4 @@
-package org.example;
+package com.yelp.restaurantFinder;
 
 public class Review {
 

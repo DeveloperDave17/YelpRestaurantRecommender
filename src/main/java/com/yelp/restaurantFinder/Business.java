@@ -1,4 +1,4 @@
-package org.example;
+package com.yelp.restaurantFinder;
 import java.util.List;
 
 public class Business {
