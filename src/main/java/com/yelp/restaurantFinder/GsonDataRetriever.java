@@ -123,8 +123,8 @@ public class GsonDataRetriever {
             Review review = readReview(reader);
             if (businesses.containsKey(review.business_id)){
                 Business business = businesses.get(review.business_id);
-                double starsHi = (int)(business.stars + 1);
-                double starsLo = (int)(business.stars);
+                double starsHi = (int)(business.getStars() + 1);
+                double starsLo = (int)(business.getStars());
                 if (review.stars >= starsLo | review.stars <= starsHi) {
                     reviews.add(review);
                     i++;
