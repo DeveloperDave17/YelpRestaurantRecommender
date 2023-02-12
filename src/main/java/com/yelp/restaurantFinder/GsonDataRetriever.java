@@ -14,19 +14,19 @@ public class GsonDataRetriever {
     public static HashMap<String,Business> getBusinessHashMap() throws IOException {
         File theBusinessFile = new File("../yelp_academic_dataset_business.json");
         FileInputStream businessStream = new FileInputStream(theBusinessFile);
-        return readBusinessJsonStream(businessStream);
+        return readBusinessJsonStreamHM(businessStream);
     }
-    private static HashMap<String,Business> readBusinessJsonStream(InputStream in) throws IOException {
+    private static HashMap<String,Business> readBusinessJsonStreamHM(InputStream in) throws IOException {
         JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
         reader.setLenient(true);
         try{
-            return readBusinesses(reader);
+            return readBusinessesHM(reader);
         } finally {
             reader.close();
         }
     }
 
-    private static HashMap<String,Business> readBusinesses(JsonReader reader) throws IOException {
+    private static HashMap<String,Business> readBusinessesHM(JsonReader reader) throws IOException {
         List<Business> businesses = new ArrayList<>();
         HashMap<String, Business> businessesMap = new HashMap<>();
 
@@ -43,6 +43,35 @@ public class GsonDataRetriever {
             }
         }
         return businessesMap;
+    }
+
+    public static List<Business> getBusinessList() throws IOException {
+        File theBusinessFile = new File("../yelp_academic_dataset_business.json");
+        FileInputStream businessStream = new FileInputStream(theBusinessFile);
+        return readBusinessJsonStreamL(businessStream);
+    }
+
+    private static List<Business> readBusinessJsonStreamL(InputStream in) throws IOException {
+        JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+        reader.setLenient(true);
+        try{
+            return readBusinessesL(reader);
+        } finally {
+            reader.close();
+        }
+    }
+
+    private static List<Business> readBusinessesL(JsonReader reader) throws IOException {
+        List<Business> businesses = new ArrayList<>();
+
+        while (reader.hasNext()) {
+            Business business = readBusiness(reader);
+            if (business.getIsRestaurant() & business.getReview_count() >= 200 && business.getStars() >= 3){
+                businesses.add(business);
+            }
+        }
+
+        return businesses;
     }
 
     private static Business readBusiness(JsonReader reader) throws IOException {
