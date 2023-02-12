@@ -32,14 +32,14 @@ public class GsonDataRetriever {
 
         while (reader.hasNext()) {
             Business business = readBusiness(reader);
-            if (business.isRestaurant){
+            if (business.getIsRestaurant()){
                 businesses.add(business);
             }
         }
 
         for (Business business: businesses){
-            if (business.review_count >= 200 && business.stars >= 3){
-                businessesMap.put(business.business_id, business);
+            if (business.getReview_count() >= 200 && business.getStars() >= 3){
+                businessesMap.put(business.getBusiness_id(), business);
             }
         }
         return businessesMap;
@@ -121,11 +121,11 @@ public class GsonDataRetriever {
 
         while (reader.hasNext() & i < 10000) {
             Review review = readReview(reader);
-            if (businesses.containsKey(review.business_id)){
-                Business business = businesses.get(review.business_id);
+            if (businesses.containsKey(review.getBusiness_id())){
+                Business business = businesses.get(review.getBusiness_id());
                 double starsHi = (int)(business.getStars() + 1);
                 double starsLo = (int)(business.getStars());
-                if (review.stars >= starsLo | review.stars <= starsHi) {
+                if (review.getStars() >= starsLo | review.getStars() <= starsHi) {
                     reviews.add(review);
                     i++;
                 }
