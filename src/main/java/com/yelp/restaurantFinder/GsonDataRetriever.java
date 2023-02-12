@@ -5,13 +5,14 @@ import com.google.gson.stream.JsonToken;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
 public class GsonDataRetriever {
 
     public static HashMap<String,Business> getBusinessHashMap() throws IOException {
-        File theBusinessFile = new File("yelp_academic_dataset_business.json");
+        File theBusinessFile = new File("../yelp_academic_dataset_business.json");
         FileInputStream businessStream = new FileInputStream(theBusinessFile);
         return readBusinessJsonStream(businessStream);
     }
@@ -26,21 +27,31 @@ public class GsonDataRetriever {
     }
 
     private static HashMap<String,Business> readBusinesses(JsonReader reader) throws IOException {
-        HashMap<String, Business> businesses = new HashMap<>();
+        List<Business> businesses = new ArrayList<>();
+        HashMap<String, Business> businessesMap = new HashMap<>();
 
         while (reader.hasNext()) {
             Business business = readBusiness(reader);
             if (business.isRestaurant){
-                businesses.put(business.business_id,business);
+                businesses.add(business);
             }
         }
-        return businesses;
+
+        for (Business business: businesses){
+            if (business.review_count >= 200 && business.stars >= 3){
+                businessesMap.put(business.business_id, business);
+            }
+        }
+        return businessesMap;
     }
 
     private static Business readBusiness(JsonReader reader) throws IOException {
         String business_id = null;
+        String businessName = null;
         double latitude = 0;
         double longitude = 0;
+        double stars = 0;
+        int review_count = 0;
         List<String> categories = null;
         boolean isRestaurant = false;
 
@@ -54,12 +65,27 @@ public class GsonDataRetriever {
                 latitude = reader.nextDouble();
             } else if (name.equals("longitude")) {
                 longitude = reader.nextDouble();
+            } else if (name.equals("stars")){
+                stars = reader.nextDouble();
+            } else if (name.equals("review_count")){
+                review_count = reader.nextInt();
+            } else if (name.equals("name")){
+                businessName = reader.nextString();
             } else if (name.equals("categories")) {
+                // Ensures the array is not empty before being read
                 if (!reader.peek().equals(JsonToken.NULL)) {
                     String category = reader.nextString();
-                    categories.add(category);
+                    // Checking for restaurants
                     if (category.contains("Restaurants") | category.contains("Food")){
+                        // Checking to see if the categories were all mashed into one string
+                        if (category.contains(",")){
+                            categories = Arrays.stream(category.split(",")).toList();
+                        }else{
+                            categories.add(category);
+                        }
                         isRestaurant = true;
+                    } else {
+                        categories.add(category);
                     }
                 } else{
                     reader.nextNull();
@@ -69,11 +95,11 @@ public class GsonDataRetriever {
             }
         }
         reader.endObject();
-        return new Business(business_id, latitude, longitude, categories, isRestaurant);
+        return new Business(business_id, businessName, latitude, longitude, stars, review_count, categories, isRestaurant);
     }
 
     public static List<Review> getReviewList(HashMap<String,Business> businessHashMap) throws IOException {
-        File theReviewFile = new File("yelp_academic_dataset_review.json");
+        File theReviewFile = new File("../yelp_academic_dataset_review.json");
         FileInputStream reviewStream = new FileInputStream(theReviewFile);
         return readReviewJsonStream(reviewStream, businessHashMap);
     }
@@ -96,8 +122,13 @@ public class GsonDataRetriever {
         while (reader.hasNext() & i < 10000) {
             Review review = readReview(reader);
             if (businesses.containsKey(review.business_id)){
-                reviews.add(review);
-                i++;
+                Business business = businesses.get(review.business_id);
+                double starsHi = (int)(business.stars + 1);
+                double starsLo = (int)(business.stars);
+                if (review.stars >= starsLo | review.stars <= starsHi) {
+                    reviews.add(review);
+                    i++;
+                }
             }
         }
         return reviews;
