@@ -1,4 +1,4 @@
-package freqht;
+package com.yelp.restaurantFinder;
 import java.util.*;
 import java.io.*;
 
