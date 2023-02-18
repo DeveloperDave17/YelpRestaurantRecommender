@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" href="/css/styles.css">
+<head>
+    <meta charset="UTF-8">
+    <title>This Works</title>
+</head>
+<body>
+<div id="banner">The Ultimate Restaurant Guide to the Galaxy</div>
+<form id="search" action="#" th:action="@{/}" th:object="${query}" method="post">
+    <input type="text" id="name" th:field="*{name}" placeholder="Restaurant" />
+    <button type="submit">Search</button>
+</form>
+
+
+
+</body>
+</html>
