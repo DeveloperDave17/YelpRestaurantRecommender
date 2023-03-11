@@ -60,7 +60,7 @@ public class GsonDataRetriever {
         }
 
         for (Business business: businesses){
-            if (business.getReview_count() >= 200 && business.getStars() >= 3 && business.getIsOpen() == 1 ){
+            if (business.getReview_count() >= 50 && business.getStars() >= 3 && business.getIsOpen() == 1 ){
                 businessesMap.put(business.getBusiness_id(), business);
                 // Used to enforce a size of 10000 businesses to meet project specifications
                 if ( businessesMap.size() == 10000 )
@@ -97,9 +97,12 @@ public class GsonDataRetriever {
 
         while (reader.hasNext()) {
             Business business = readBusiness(reader);
-            if (business.getIsRestaurant() & business.getReview_count() >= 200 && business.getStars() >= 3 &&
+            if (business.getIsRestaurant() & business.getReview_count() >= 50 && business.getStars() >= 3 &&
                 business.getIsOpen() == 1){
                 businesses.add(business);
+                if (businesses.size() == 10000){
+                    return businesses;
+                }
             }
         }
 
