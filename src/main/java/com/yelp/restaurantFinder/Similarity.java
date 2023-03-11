@@ -156,6 +156,8 @@ public class Similarity {
                 .replace(".", "")
                 .replace("!", "")
                 .replace("?","")
+                .replace(")", "")
+                .replace("(", "")
                 .toLowerCase()
                 .split(" ");
     }
