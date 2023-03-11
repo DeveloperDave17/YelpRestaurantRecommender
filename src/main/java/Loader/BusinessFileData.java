@@ -1,5 +1,8 @@
 package Loader;
 
+/**
+ * A wrapper class for persistently storing file names and associated clusters.
+ */
 public class BusinessFileData {
 
     private final String businessFileName;
