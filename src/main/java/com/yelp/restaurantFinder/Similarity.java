@@ -22,7 +22,7 @@ public class Similarity {
      * @return List containing the similar business names.
      * @throws IOException if the data files are not found.
      */
-    public static List<String> calculation(String name) throws IOException {
+    public static List<String> calculation(String name, List<Review> reviews) throws IOException {
         List<Business> targetBusinesses = new ArrayList<>();
         List<Business> completeListOfBusinesses = GsonDataRetriever.getBusinessList();
 
@@ -38,9 +38,8 @@ public class Similarity {
         }
 
         HashMap<String,Business> businessHashMap = GsonDataRetriever.getBusinessHashMap();
-        List<Review> completeListOfReviews = GsonDataRetriever.getReviewList(businessHashMap);
 
-        List<String> chosenBusinessIDs = reviewCompare(targetBusinesses, completeListOfReviews, businessHashMap);
+        List<String> chosenBusinessIDs = reviewCompare(targetBusinesses, reviews, businessHashMap);
 
         List<String> similarRestaurants = new ArrayList<>();
 
