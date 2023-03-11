@@ -62,16 +62,17 @@ public class LoaderApplication {
             textTable.setReviewCount(reviewCount);
 
             textTable.printAll();
+            System.out.println("\n Writing Table \n");
 
             textTable.writeTable(writingChannel);
         }
 
 
-//        try (FileInputStream streamIn = new FileInputStream(business.getName());
-//             ObjectInputStream ois = new ObjectInputStream(streamIn)) {
-//            FreqHT textTable = (FreqHT) ois.readObject();
-//            textTable.printAll();
-//        }
+        try (RandomAccessFile reader = new RandomAccessFile(business.getName().replace(" ", "_"), "r");
+             FileChannel readingChannel = reader.getChannel()) {
+            FreqHT textTable = FreqHTfactory.loadFreqHT(readingChannel);
+            textTable.printAll();
+        }
 
     }
 

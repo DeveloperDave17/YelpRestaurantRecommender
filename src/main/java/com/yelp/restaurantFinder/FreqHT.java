@@ -12,14 +12,14 @@ import java.nio.charset.StandardCharsets;
  */
 public class FreqHT implements java.io.Serializable {
     static final class Node {
-	Object key;
+	String key;
 	Node next;
 	int count;
 	int numDocsAppearedIn;
 	double tf_idf;
 
 	// Object value;
-	private Node(Object k, int c, double tfidf, int numDocsAppearedIn, Node n) {
+	private Node(String k, int c, double tfidf, int numDocsAppearedIn, Node n) {
 		key = k; count = c; tf_idf = tfidf; this.numDocsAppearedIn = numDocsAppearedIn; next = n; }
     }
     Node[] table = new Node[8]; // always a power of 2
@@ -37,7 +37,7 @@ public class FreqHT implements java.io.Serializable {
     }
 
     //added getCount
-    public int getCount(Object key){
+    public int getCount(String key){
         int h = key.hashCode();
         int i = h & (table.length - 1);
         for (Node e = table[i]; e != null; e = e.next){
@@ -49,7 +49,7 @@ public class FreqHT implements java.io.Serializable {
     }
 
     //increase count before return
-    public void add(Object key) {
+    public void add(String key) {
 		int h = key.hashCode();
 		int i = h & (table.length - 1);
 		for (Node e = table[i]; e != null; e = e.next) {
@@ -68,7 +68,7 @@ public class FreqHT implements java.io.Serializable {
 		}
 	}
 
-	private void add(Object key, int count, double tf_idf, int numDocsAppeared){
+	private void add(String key, int count, double tf_idf, int numDocsAppeared){
 		int h = key.hashCode();
 		int i = h & (table.length - 1);
 
@@ -138,8 +138,8 @@ public class FreqHT implements java.io.Serializable {
 	int n = s.readInt();
 	reviewCount = s.readInt();
 
-	for (int i = 0; i < n; ++i)
-	    add(s.readObject(), s.readInt(), s.readDouble(), s.readInt());
+//	for (int i = 0; i < n; ++i)
+//	    add(s.readObject(), s.readInt(), s.readDouble(), s.readInt());
 
 	totalCount = s.readInt();
     }
@@ -152,21 +152,49 @@ public class FreqHT implements java.io.Serializable {
 		tableBuffer.position(0);
 		writingChannel.write(tableBuffer);
 
-		tableBuffer = ByteBuffer.allocate(56);
 		for (int i = 0; i < table.length; ++i) {
 			for (Node e = table[i]; e != null; e = e.next) {
-				tableBuffer.clear();
-				tableBuffer.limit(40);
-				tableBuffer.put(String.valueOf(e.key).getBytes(StandardCharsets.UTF_8));
-				tableBuffer.limit(56);
-				tableBuffer.position(40);
-				tableBuffer.putInt(e.count);
-				tableBuffer.putDouble(e.tf_idf);
-				tableBuffer.putInt(e.numDocsAppearedIn);
-				tableBuffer.rewind();
-				writingChannel.write(tableBuffer);
+				ByteBuffer nodeBuffer = ByteBuffer.allocate(56);
+				nodeBuffer.limit(40);
+				nodeBuffer.put(e.key.getBytes(StandardCharsets.UTF_8));
+				nodeBuffer.limit(56);
+				nodeBuffer.position(40);
+				nodeBuffer.putInt(e.count);
+				nodeBuffer.putDouble(e.tf_idf);
+				nodeBuffer.putInt(e.numDocsAppearedIn);
+				nodeBuffer.position(0);
+				writingChannel.write(nodeBuffer);
 			}
 		}
+	}
+
+	public void readTable(FileChannel readingChannel) throws IOException{
+		ByteBuffer tableBuffer = ByteBuffer.allocate(12);
+		readingChannel.read(tableBuffer);
+		tableBuffer.position(0);
+		int size = tableBuffer.getInt();
+		int totalCount = tableBuffer.getInt();
+		int reviewCount = tableBuffer.getInt();
+
+		for ( int i = 0; i < size; i++){
+			tableBuffer = ByteBuffer.allocate(56);
+			readingChannel.read(tableBuffer);
+			tableBuffer.position(0);
+			tableBuffer.limit(40);
+			byte[] keyBytes = new byte[40];
+			tableBuffer.get(keyBytes);
+			tableBuffer.limit(56);
+			tableBuffer.position(40);
+			int count = tableBuffer.getInt();
+			double tf_idf = tableBuffer.getDouble();
+			int numDocsAppearedIn = tableBuffer.getInt();
+			add((new String(keyBytes, StandardCharsets.UTF_8)).replace("\0", ""), count, tf_idf, numDocsAppearedIn);
+		}
+
+		this.totalCount = totalCount;
+		this.reviewCount = reviewCount;
+
+
 	}
 
 	/**
