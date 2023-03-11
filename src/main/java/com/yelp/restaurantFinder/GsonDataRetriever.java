@@ -62,6 +62,9 @@ public class GsonDataRetriever {
         for (Business business: businesses){
             if (business.getReview_count() >= 200 && business.getStars() >= 3 && business.getIsOpen() == 1 ){
                 businessesMap.put(business.getBusiness_id(), business);
+                // Used to enforce a size of 10000 businesses to meet project specifications
+                if ( businessesMap.size() == 10000 )
+                    return businessesMap;
             }
         }
         return businessesMap;
@@ -69,7 +72,7 @@ public class GsonDataRetriever {
 
     /**
      * Establishes the file where business json data exists and calls the readBusinessJsonStreamL
-     * @return A list containing all of the businesses that match our specified criteria of being a restaurant,
+     * @return A list containing all the businesses that match our specified criteria of being a restaurant,
      * having 200+ reviews, 3 or more stars, and are currently in operation.
      * @throws IOException
      */
@@ -191,16 +194,30 @@ public class GsonDataRetriever {
     private static List<Review> readReviews(JsonReader reader, HashMap<String,Business> businesses) throws IOException {
         List<Review> reviews = new ArrayList<>();
 
+        // Used to store the review count for businesses allows enforcing of 5 associated reviews per business
+        HashMap<String, Integer> reviewCountForBusinesses = new HashMap<>();
+
+        for (String businessName : businesses.keySet()){
+            reviewCountForBusinesses.put(businessName, 0);
+        }
+
         int i = 0;
 
-        while (reader.hasNext() & i < 10000) {
+        while (reader.hasNext() & i < 50000) {
             Review review = readReview(reader);
-            if (businesses.containsKey(review.getBusiness_id())){
-                Business business = businesses.get(review.getBusiness_id());
+            String businessId = review.getBusiness_id();
+            /*
+                Guarantees the reviews associated business is a target business and requires that at most 5 reviews
+                exist for the associated business
+             */
+            if (businesses.containsKey(businessId) && reviewCountForBusinesses.get(businessId) < 5){
+                Business business = businesses.get(businessId);
                 double starsHi = (int)(business.getStars() + 1);
                 double starsLo = (int)(business.getStars());
                 if (review.getStars() >= starsLo | review.getStars() <= starsHi) {
                     reviews.add(review);
+                    // Updates the hashmap to reflect the businesses current review count
+                    reviewCountForBusinesses.replace(businessId, reviewCountForBusinesses.get(businessId) + 1);
                     i++;
                 }
             }
