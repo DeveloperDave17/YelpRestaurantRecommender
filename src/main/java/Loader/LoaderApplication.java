@@ -21,12 +21,11 @@ public class LoaderApplication {
         HashMap<String, Business> businessMap = GsonDataRetriever.getBusinessHashMap();
         List<Review> reviews = GsonDataRetriever.getReviewList(businessMap);
 
-        System.out.println(businesses.size());
-        System.out.println(businessMap.size());
-        System.out.println(reviews.size());
+        ExtendibleHashTable businessFilesEHT = new ExtendibleHashTable();
 
         Business business = businesses.get(0);
-        try (RandomAccessFile writer = new RandomAccessFile(business.getName().replace(" ", "_"), "rw");
+        String businessFileName = business.getName().replace(" ", "_");
+        try (RandomAccessFile writer = new RandomAccessFile(businessFileName, "rw");
              FileChannel writingChannel = writer.getChannel()) {
 
             FreqHT textTable = new FreqHT();
@@ -60,19 +59,17 @@ public class LoaderApplication {
             }
 
             textTable.setReviewCount(reviewCount);
-
-            textTable.printAll();
-            System.out.println("\n Writing Table \n");
-
             textTable.writeTable(writingChannel);
         }
 
+        businessFilesEHT.put(business.getName(), new BusinessFileData(business.getName(), businessFileName, ""));
 
-        try (RandomAccessFile reader = new RandomAccessFile(business.getName().replace(" ", "_"), "r");
-             FileChannel readingChannel = reader.getChannel()) {
-            FreqHT textTable = FreqHTfactory.loadFreqHT(readingChannel);
-            textTable.printAll();
-        }
+        //Reading the freq table back in
+//        try (RandomAccessFile reader = new RandomAccessFile(business.getName().replace(" ", "_"), "r");
+//             FileChannel readingChannel = reader.getChannel()) {
+//            FreqHT textTable = FreqHTfactory.loadFreqHT(readingChannel);
+//            textTable.printAll();
+//        }
 
     }
 
