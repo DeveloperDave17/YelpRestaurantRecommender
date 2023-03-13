@@ -92,6 +92,8 @@ public class GsonDataRetriever {
         }
     }
 
+
+
     private static List<Business> readBusinessesL(JsonReader reader) throws IOException {
         List<Business> businesses = new ArrayList<>();
 
@@ -184,11 +186,27 @@ public class GsonDataRetriever {
         return readReviewJsonStream(reviewStream, businessHashMap);
     }
 
+    public static HashMap<String, List<Review>> getBusinesstoReviewList(HashMap<String,Business> businessHashMap) throws IOException {
+        File theReviewFile = new File("../yelp_academic_dataset_review.json");
+        FileInputStream reviewStream = new FileInputStream(theReviewFile);
+        return readReviewMapJsonStream(reviewStream, businessHashMap);
+    }
+
     private static List<Review> readReviewJsonStream(InputStream in, HashMap<String,Business> businesses) throws IOException {
         JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
         reader.setLenient(true);
         try{
             return readReviews(reader,businesses);
+        } finally {
+            reader.close();
+        }
+    }
+
+    private static HashMap<String, List<Review>> readReviewMapJsonStream(InputStream in, HashMap<String,Business> businesses) throws IOException {
+        JsonReader reader = new JsonReader(new InputStreamReader(in, "UTF-8"));
+        reader.setLenient(true);
+        try{
+            return readReviewsMap(reader,businesses);
         } finally {
             reader.close();
         }
@@ -226,6 +244,44 @@ public class GsonDataRetriever {
             }
         }
         return reviews;
+    }
+
+    private static HashMap<String, List<Review>> readReviewsMap(JsonReader reader, HashMap<String,Business> businesses) throws IOException {
+        List<Review> reviews = new ArrayList<>();
+        HashMap<String, List<Review>> businessListHashMap = new HashMap<>();
+
+        // Used to store the review count for businesses allows enforcing of 5 associated reviews per business
+        HashMap<String, Integer> reviewCountForBusinesses = new HashMap<>();
+
+        for (String businessName : businesses.keySet()){
+            reviewCountForBusinesses.put(businessName, 0);
+        }
+
+        int i = 0;
+
+        while (reader.hasNext() & i < 50000) {
+            Review review = readReview(reader);
+            String businessId = review.getBusiness_id();
+            /*
+                Guarantees the reviews associated business is a target business and requires that at most 5 reviews
+                exist for the associated business
+             */
+            if (businesses.containsKey(businessId) && reviewCountForBusinesses.get(businessId) < 5){
+                Business business = businesses.get(businessId);
+                if (!businessListHashMap.containsKey(business.getBusiness_id())){
+                    businessListHashMap.put(business.getBusiness_id(), new ArrayList<>());
+                }
+                double starsHi = (int)(business.getStars() + 1);
+                double starsLo = (int)(business.getStars());
+                if (review.getStars() >= starsLo | review.getStars() <= starsHi) {
+                    businessListHashMap.get(business.getBusiness_id()).add(review);
+                    // Updates the hashmap to reflect the businesses current review count
+                    reviewCountForBusinesses.replace(businessId, reviewCountForBusinesses.get(businessId) + 1);
+                    i++;
+                }
+            }
+        }
+        return businessListHashMap;
     }
 
     private static Review readReview(JsonReader reader) throws IOException {

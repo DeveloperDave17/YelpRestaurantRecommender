@@ -23,46 +23,42 @@ public class LoaderApplication {
 
         ExtendibleHashTable businessFilesEHT = new ExtendibleHashTable();
 
-        Business business = businesses.get(0);
-        String businessFileName = business.getName().replace(" ", "_");
-        try (RandomAccessFile writer = new RandomAccessFile(businessFileName, "rw");
-             FileChannel writingChannel = writer.getChannel()) {
+        Set<String> uniqueWords = poolUniqueWords(reviews);
+        HashMap<String, List<Review>> businessListHashMap = GsonDataRetriever.getBusinesstoReviewList(businessMap);
+        HashMap<String, Integer> uniqueWordWithCounts = uniqueWordToCount(reviews);
 
-            FreqHT textTable = new FreqHT();
-            int reviewCount = 0;
-            for (Review review : reviews) {
-                Set<String> uniqueWords = new HashSet<>();
-                if (review.getBusiness_id().equals(business.getBusiness_id())) {
+        for (Business business: businesses) {
+            String businessFileName = business.getName().replace(" ", "_").replace("/", "_");
+            try (RandomAccessFile writer = new RandomAccessFile(businessFileName, "rw");
+                 FileChannel writingChannel = writer.getChannel()) {
 
+                FreqHT textTable = new FreqHT();
+                int reviewCount = reviews.size();
+                List<Review> reviewsList = businessListHashMap.get(business.getBusiness_id());
+                for (Review review : reviewsList) {
                     String[] reviewWords = splitReviewText(review.getText());
-
-                    for (String word: reviewWords){
-                        textTable.add(word);
-                        uniqueWords.add(word);
+                    for (String word : reviewWords) {
+                        textTable.add(String.format("%1.40s", word));
                     }
 
-                    for (String uniqueWord: uniqueWords){
-                        textTable.setNumDocsAppearedIn(uniqueWord, textTable.getDocNum(uniqueWord) + 1);
-                    }
+                }
 
-                }else {
-                    String[] reviewWords = splitReviewText(review.getText());
-
-                    uniqueWords.addAll(List.of(reviewWords));
-
-                    for (String uniqueWord: uniqueWords){
-                        textTable.setNumDocsAppearedIn(uniqueWord, textTable.getDocNum(uniqueWord) + 1);
+                for(String uniqueWord: uniqueWords) {
+                    if (textTable.contains(String.format("%1.40s", uniqueWord))) {
+                        textTable.setNumDocsAppearedIn(String.format("%1.40s", uniqueWord),
+                                uniqueWordWithCounts.get(uniqueWord));
                     }
                 }
 
-                reviewCount++;
+                textTable.setReviewCount(reviewCount);
+                textTable.writeTable(writingChannel);
             }
 
-            textTable.setReviewCount(reviewCount);
-            textTable.writeTable(writingChannel);
-        }
+            businessFilesEHT.put(business.getName(), new BusinessFileData(business.getName(), businessFileName, ""));
 
-        businessFilesEHT.put(business.getName(), new BusinessFileData(business.getName(), businessFileName, ""));
+            }
+
+        businessFilesEHT.writeTableToFile();
 
         //Reading the freq table back in
 //        try (RandomAccessFile reader = new RandomAccessFile(business.getName().replace(" ", "_"), "r");
@@ -82,5 +78,33 @@ public class LoaderApplication {
                 .replace("(", "")
                 .toLowerCase()
                 .split(" ");
+    }
+
+    private static Set<String> poolUniqueWords(List<Review> reviews){
+        Set<String> uniqueWords = new HashSet<>();
+        for (Review review : reviews) {
+            String[] reviewWords = splitReviewText(review.getText());
+
+            uniqueWords.addAll(List.of(reviewWords));
+        }
+
+        return uniqueWords;
+    }
+
+    private static HashMap<String, Integer> uniqueWordToCount(List<Review> reviews){
+
+        HashMap<String, Integer> uniqueWordsToCount = new HashMap<>();
+
+        for(Review review: reviews) {
+            String[] reviewWords = splitReviewText(review.getText());
+            Set<String> uniqueWords = new HashSet<>();
+            uniqueWords.addAll(List.of(reviewWords));
+
+            for (String uniqueWord : uniqueWords) {
+                uniqueWordsToCount.put(uniqueWord, uniqueWordsToCount.getOrDefault(uniqueWord, 0) + 1);
+            }
+        }
+
+        return uniqueWordsToCount;
     }
 }

@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
  *
  * @author David Hennigan and Anthony Impellizzeri
  */
-public class FreqHT implements java.io.Serializable {
+public class FreqHT {
     static final class Node {
 	String key;
 	Node next;
@@ -154,11 +154,11 @@ public class FreqHT implements java.io.Serializable {
 
 		for (int i = 0; i < table.length; ++i) {
 			for (Node e = table[i]; e != null; e = e.next) {
-				ByteBuffer nodeBuffer = ByteBuffer.allocate(56);
-				nodeBuffer.limit(40);
+				ByteBuffer nodeBuffer = ByteBuffer.allocate(176);
+				nodeBuffer.limit(160);
 				nodeBuffer.put(e.key.getBytes(StandardCharsets.UTF_8));
-				nodeBuffer.limit(56);
-				nodeBuffer.position(40);
+				nodeBuffer.limit(176);
+				nodeBuffer.position(160);
 				nodeBuffer.putInt(e.count);
 				nodeBuffer.putDouble(e.tf_idf);
 				nodeBuffer.putInt(e.numDocsAppearedIn);
@@ -177,14 +177,14 @@ public class FreqHT implements java.io.Serializable {
 		int reviewCount = tableBuffer.getInt();
 
 		for ( int i = 0; i < size; i++){
-			tableBuffer = ByteBuffer.allocate(56);
+			tableBuffer = ByteBuffer.allocate(176);
 			readingChannel.read(tableBuffer);
 			tableBuffer.position(0);
-			tableBuffer.limit(40);
-			byte[] keyBytes = new byte[40];
+			tableBuffer.limit(160);
+			byte[] keyBytes = new byte[160];
 			tableBuffer.get(keyBytes);
-			tableBuffer.limit(56);
-			tableBuffer.position(40);
+			tableBuffer.limit(176);
+			tableBuffer.position(160);
 			int count = tableBuffer.getInt();
 			double tf_idf = tableBuffer.getDouble();
 			int numDocsAppearedIn = tableBuffer.getInt();
