@@ -56,7 +56,7 @@ public class LoaderApplication {
 
             businessFilesEHT.put(business.getName(), new BusinessFileData(business.getName(), businessFileName, ""));
 
-            }
+        }
 
         businessFilesEHT.writeTableToFile();
 

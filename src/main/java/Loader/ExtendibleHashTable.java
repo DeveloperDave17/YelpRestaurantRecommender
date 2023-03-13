@@ -71,19 +71,6 @@ public class ExtendibleHashTable {
                     int h = businessFileData.getBusinessName().hashCode() & ((1 << globalDepth) - 1);
 
                     if ((h | (1 << bin.getLocalDepth())) == h){
-                        ByteBuffer bin1Buffer = ByteBuffer.allocate(200);
-                        bin1Buffer.limit(80);
-                        bin1Buffer.put(businessFileData.getBusinessName().getBytes(StandardCharsets.UTF_8));
-                        bin1Buffer.limit(160);
-                        bin1Buffer.position(80);
-                        bin1Buffer.put(businessFileData.getBusinessFileName().getBytes(StandardCharsets.UTF_8));
-                        bin1Buffer.limit(200);
-                        bin1Buffer.position(160);
-                        bin1Buffer.put(businessFileData.getCluster().getBytes(StandardCharsets.UTF_8));
-                        bin1Buffer.position(0);
-                        bin1WritingChannel.write(bin1Buffer);
-                        bin1size++;
-                    }else{
                         ByteBuffer bin2Buffer = ByteBuffer.allocate(200);
                         bin2Buffer.limit(80);
                         bin2Buffer.put(businessFileData.getBusinessName().getBytes(StandardCharsets.UTF_8));
@@ -96,12 +83,25 @@ public class ExtendibleHashTable {
                         bin2Buffer.position(0);
                         bin2WritingChannel.write(bin2Buffer);
                         bin2size++;
+                    }else{
+                        ByteBuffer bin1Buffer = ByteBuffer.allocate(200);
+                        bin1Buffer.limit(80);
+                        bin1Buffer.put(businessFileData.getBusinessName().getBytes(StandardCharsets.UTF_8));
+                        bin1Buffer.limit(160);
+                        bin1Buffer.position(80);
+                        bin1Buffer.put(businessFileData.getBusinessFileName().getBytes(StandardCharsets.UTF_8));
+                        bin1Buffer.limit(200);
+                        bin1Buffer.position(160);
+                        bin1Buffer.put(businessFileData.getCluster().getBytes(StandardCharsets.UTF_8));
+                        bin1Buffer.position(0);
+                        bin1WritingChannel.write(bin1Buffer);
+                        bin1size++;
                     }
                 }
 
                 bin.setSize(bin1size);
                 bin.setLocalDepth(bin.getLocalDepth() + 1);
-                bin2.setSize(bin1size);
+                bin2.setSize(bin2size);
 
                 List<Integer> indicesForBin1 = generateIndices(bin);
                 List<Integer> indicesForBin2 = generateIndices(bin2);
