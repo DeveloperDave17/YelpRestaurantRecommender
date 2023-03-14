@@ -1,5 +1,8 @@
 package com.yelp.restaurantFinder;
 import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This class creates a frequency hash tables that aids in the creation of tf-idf metrics. Storing and calculating them
@@ -7,34 +10,34 @@ import java.io.*;
  *
  * @author David Hennigan and Anthony Impellizzeri
  */
-class FreqHT implements java.io.Serializable {
+public class FreqHT {
     static final class Node {
-	Object key;
+	String key;
 	Node next;
 	int count;
 	int numDocsAppearedIn;
 	double tf_idf;
 
 	// Object value;
-	Node(Object k, int c, double tfidf, int numDocsAppearedIn, Node n) {
+	private Node(String k, int c, double tfidf, int numDocsAppearedIn, Node n) {
 		key = k; count = c; tf_idf = tfidf; this.numDocsAppearedIn = numDocsAppearedIn; next = n; }
     }
     Node[] table = new Node[8]; // always a power of 2
     int size = 0;
 	int totalCount = 0;
 	int reviewCount = 0;
-    boolean contains(Object key) {
+    public boolean contains(Object key) {
 	int h = key.hashCode();
 	int i = h & (table.length - 1);
 	for (Node e = table[i]; e != null; e = e.next) {
 	    if (key.equals(e.key))
-		return true;
+			return true;
 	}
 	return false;
     }
 
     //added getCount
-    public int getCount(Object key){
+    public int getCount(String key){
         int h = key.hashCode();
         int i = h & (table.length - 1);
         for (Node e = table[i]; e != null; e = e.next){
@@ -46,7 +49,7 @@ class FreqHT implements java.io.Serializable {
     }
 
     //increase count before return
-    void add(Object key) {
+    public void add(String key) {
 		int h = key.hashCode();
 		int i = h & (table.length - 1);
 		for (Node e = table[i]; e != null; e = e.next) {
@@ -65,7 +68,18 @@ class FreqHT implements java.io.Serializable {
 		}
 	}
 
-    void resize() {
+	private void add(String key, int count, double tf_idf, int numDocsAppeared){
+		int h = key.hashCode();
+		int i = h & (table.length - 1);
+
+		table[i] = new Node(key, count,  tf_idf, numDocsAppeared, table[i]); //count param included
+		++size;
+		if ((float)size/table.length >= 0.75f) {
+			resize();
+		}
+	}
+
+    private void resize() {
 	Node[] oldTable = table;
 	int oldCapacity = oldTable.length;
 	int newCapacity = oldCapacity << 1;
@@ -95,27 +109,93 @@ class FreqHT implements java.io.Serializable {
 	    e = e.next;
 	}
     }
-    void printAll() {
+    public void printAll() {
         for (int i = 0; i < table.length; ++i)
             for (Node e = table[i]; e != null; e = e.next)
-                System.out.println(e.key);
+                System.out.println(e.key + " "  + e.count + " " + e.numDocsAppearedIn);
         System.out.println();
     }
+	@Serial
     private void writeObject(ObjectOutputStream s) throws Exception {
 	s.defaultWriteObject();
 	s.writeInt(size);
-	for (int i = 0; i < table.length; ++i) {
-	    for (Node e = table[i]; e != null; e = e.next) {
-		s.writeObject(e.key);
-	    }
-	}
+	s.writeInt(reviewCount);
+		for (int i = 0; i < table.length; ++i) {
+			for (Node e = table[i]; e != null; e = e.next) {
+				s.writeObject(e.key);
+				s.writeInt(e.count);
+				s.writeDouble(e.tf_idf);
+				s.writeInt(e.numDocsAppearedIn);
+			}
+		}
+
+		s.writeObject(totalCount);
     }
+
+	@Serial
     private void readObject(ObjectInputStream s) throws Exception {
 	s.defaultReadObject();
 	int n = s.readInt();
-	for (int i = 0; i < n; ++i)
-	    add(s.readObject());
+	reviewCount = s.readInt();
+
+//	for (int i = 0; i < n; ++i)
+//	    add(s.readObject(), s.readInt(), s.readDouble(), s.readInt());
+
+	totalCount = s.readInt();
     }
+
+	public void writeTable(FileChannel writingChannel) throws IOException{
+		ByteBuffer tableBuffer = ByteBuffer.allocate(12);
+		tableBuffer.putInt(size);
+		tableBuffer.putInt(totalCount);
+		tableBuffer.putInt(reviewCount);
+		tableBuffer.position(0);
+		writingChannel.write(tableBuffer);
+
+		for (int i = 0; i < table.length; ++i) {
+			for (Node e = table[i]; e != null; e = e.next) {
+				ByteBuffer nodeBuffer = ByteBuffer.allocate(176);
+				nodeBuffer.limit(160);
+				nodeBuffer.put(e.key.getBytes(StandardCharsets.UTF_8));
+				nodeBuffer.limit(176);
+				nodeBuffer.position(160);
+				nodeBuffer.putInt(e.count);
+				nodeBuffer.putDouble(e.tf_idf);
+				nodeBuffer.putInt(e.numDocsAppearedIn);
+				nodeBuffer.position(0);
+				writingChannel.write(nodeBuffer);
+			}
+		}
+	}
+
+	public void readTable(FileChannel readingChannel) throws IOException{
+		ByteBuffer tableBuffer = ByteBuffer.allocate(12);
+		readingChannel.read(tableBuffer);
+		tableBuffer.position(0);
+		int size = tableBuffer.getInt();
+		int totalCount = tableBuffer.getInt();
+		int reviewCount = tableBuffer.getInt();
+
+		for ( int i = 0; i < size; i++){
+			tableBuffer = ByteBuffer.allocate(176);
+			readingChannel.read(tableBuffer);
+			tableBuffer.position(0);
+			tableBuffer.limit(160);
+			byte[] keyBytes = new byte[160];
+			tableBuffer.get(keyBytes);
+			tableBuffer.limit(176);
+			tableBuffer.position(160);
+			int count = tableBuffer.getInt();
+			double tf_idf = tableBuffer.getDouble();
+			int numDocsAppearedIn = tableBuffer.getInt();
+			add((new String(keyBytes, StandardCharsets.UTF_8)).replace("\0", ""), count, tf_idf, numDocsAppearedIn);
+		}
+
+		this.totalCount = totalCount;
+		this.reviewCount = reviewCount;
+
+
+	}
 
 	/**
 	 * Either returns a words existing tf-idf value or calculates the words tf-idf value if none is stored.

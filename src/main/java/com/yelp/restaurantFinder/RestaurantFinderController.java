@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -16,6 +17,8 @@ import java.util.List;
  */
 @Controller
 public class RestaurantFinderController {
+
+    List<Review> reviews;
 
     /**
      * This function will be called whenever a user first visits the website, greets them with a search field.
@@ -37,14 +40,18 @@ public class RestaurantFinderController {
      */
     @PostMapping( value = "/")
     public ModelAndView result(@ModelAttribute Query query) throws IOException {
-        List<String> businesses = Similarity.calculation(query.getName());
+        if ( reviews == null ){
+            HashMap<String,Business> businessHashMap = GsonDataRetriever.getBusinessHashMap();
+            reviews = GsonDataRetriever.getReviewList(businessHashMap);
+        }
+        List<String> businesses = Similarity.calculation(query.getName(), reviews);
         if (businesses.size() == 2) {
             // Do if results were found
             ModelAndView mav = new ModelAndView("result");
             // sets the user up for another possible query
             mav.addObject("query", new Query());
             mav.addObject("prevQuery", query);
-            mav.addObject("businesses", Similarity.calculation(query.getName()));
+            mav.addObject("businesses", businesses);
             return mav;
         } else{
             ModelAndView mav = new ModelAndView("noResult");
