@@ -60,13 +60,6 @@ public class LoaderApplication {
 
         businessFilesEHT.writeTableToFile();
 
-        //Reading the freq table back in
-//        try (RandomAccessFile reader = new RandomAccessFile(business.getName().replace(" ", "_"), "r");
-//             FileChannel readingChannel = reader.getChannel()) {
-//            FreqHT textTable = FreqHTfactory.loadFreqHT(readingChannel);
-//            textTable.printAll();
-//        }
-
     }
 
     private static String[] splitReviewText(String text){

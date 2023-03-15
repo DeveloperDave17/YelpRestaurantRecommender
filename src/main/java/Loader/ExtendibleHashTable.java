@@ -220,7 +220,52 @@ public class ExtendibleHashTable {
     }
 
 
+    public void readTableFromFile(String fileName) throws IOException {
+        try(RandomAccessFile hashTableFile = new RandomAccessFile(fileName, "r");
+            FileChannel hashTableChannel = hashTableFile.getChannel()){
+            ByteBuffer hashTableBuffer = ByteBuffer.allocate(8);
+            hashTableChannel.read(hashTableBuffer);
+            hashTableBuffer.position(0);
+            int globalDepth = hashTableBuffer.getInt();
+            int size = hashTableBuffer.get();
 
+            Bin[] binArray = new Bin[size];
+
+            for ( int i = 0; i < size; i++ ){
+                boolean binAlreadyExists = false;
+
+                hashTableBuffer = ByteBuffer.allocate(42);
+                hashTableChannel.read(hashTableBuffer);
+                hashTableBuffer.position(0);
+                int indice = hashTableBuffer.getInt();
+                hashTableBuffer.limit(34);
+                byte[] binFileBytes = new byte[30];
+                hashTableBuffer.get(binFileBytes);
+                String binFileName = new String(binFileBytes, StandardCharsets.UTF_8).replace("\0", "");
+                hashTableBuffer.limit(42);
+                hashTableBuffer.position(34);
+                int localDepth = hashTableBuffer.getInt();
+                int binSize = hashTableBuffer.getInt();
+
+                for (int j = 0; j < i; j++){
+                    if (binArray[j].getBinFileName().equals(binFileName)){
+                        binAlreadyExists = true;
+                        binArray[i] = binArray[j];
+                    }
+                }
+
+                if(!binAlreadyExists){
+                    binArray[i] = new Bin(binFileName, localDepth, binSize);
+                }
+
+            }
+
+            this.globalDepth = globalDepth;
+            this.size = size;
+            this.binArray = binArray;
+
+        }
+    }
 
 
 
