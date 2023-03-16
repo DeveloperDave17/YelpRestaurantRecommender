@@ -59,7 +59,8 @@ public class LoaderApplication {
         }
 
         businessFilesEHT.writeTableToFile();
-
+        KMedoids kmedoid = new KMedoids(businessFilesEHT, businesses, uniqueWords);
+        kmedoid.runSimulation();
     }
 
     private static String[] splitReviewText(String text){
