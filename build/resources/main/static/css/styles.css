@@ -58,3 +58,9 @@ table {
 table, th, td {
     border: 1px solid;
 }
+
+#cluster {
+    text-align: center;
+    font-size: 24px;
+
+}
