@@ -12,18 +12,9 @@ public class Tester {
     public static void main(String[] args) throws IOException {
         List<Business> theList =  GsonDataRetriever.getBusinessList();
         HashMap<String, Integer> categoryCounts = new HashMap<>();
-        for (Business business: theList){
-            List<String> categories = business.getCategories();
-            for (String category: categories){
-                categoryCounts.put(category, categoryCounts.getOrDefault(category, 0) + 1);
-            }
 
-        }
+        ExtendibleHashTable eht = ExtendibleHashTableFactory.createExtendibleHashTable();
+        System.out.println(eht.getBin(theList.get(0).getName()).getBinFileName());
 
-        for (String key: categoryCounts.keySet()){
-            if(categoryCounts.get(key) > 200) {
-                System.out.println(key + " " + categoryCounts.get(key));
-            }
-        }
     }
 }

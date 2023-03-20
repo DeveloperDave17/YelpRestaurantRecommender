@@ -59,8 +59,8 @@ public class LoaderApplication {
         }
 
         businessFilesEHT.writeTableToFile();
-        KMedoids kmedoid = new KMedoids(businessFilesEHT, businesses, uniqueWords);
-        kmedoid.runSimulation();
+//        KMedoids kmedoid = new KMedoids(businessFilesEHT, businesses, uniqueWords);
+//        kmedoid.runSimulation();
     }
 
     private static String[] splitReviewText(String text){
@@ -74,7 +74,7 @@ public class LoaderApplication {
                 .split(" ");
     }
 
-    private static Set<String> poolUniqueWords(List<Review> reviews){
+    public static Set<String> poolUniqueWords(List<Review> reviews){
         Set<String> uniqueWords = new HashSet<>();
         for (Review review : reviews) {
             String[] reviewWords = splitReviewText(review.getText());

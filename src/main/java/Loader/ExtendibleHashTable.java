@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class ExtendibleHashTable {
@@ -192,6 +193,37 @@ public class ExtendibleHashTable {
         return businessFileDataList;
     }
 
+    public HashMap<String, String> getBusinessNameToFileName(Bin bin) throws IOException {
+
+        HashMap<String, String> businessFileData = new HashMap<>();
+
+        try(RandomAccessFile binFile = new RandomAccessFile(bin.getBinFileName(), "r");
+            FileChannel binReadingChannel = binFile.getChannel()){
+            for (int i = 0; i < bin.getSize(); i++){
+                ByteBuffer businessBuffer = ByteBuffer.allocate(200);
+                binReadingChannel.read(businessBuffer);
+                businessBuffer.position(0);
+                businessBuffer.limit(80);
+                byte[] nameBytes = new byte[80];
+                businessBuffer.get(nameBytes,0 ,80);
+                String businessName = ( new String(nameBytes, StandardCharsets.UTF_8)).replace("\0","");
+                businessBuffer.limit(160);
+                businessBuffer.position(80);
+                byte[] fileNameBytes = new byte[80];
+                businessBuffer.get(fileNameBytes,0 ,80);
+                String businessFileName = ( new String(fileNameBytes, StandardCharsets.UTF_8)).replace("\0","");
+                businessBuffer.limit(200);
+                businessBuffer.position(160);
+                byte[] clusterNameBytes = new byte[40];
+                businessBuffer.get(clusterNameBytes,0 ,40);
+                String cluster = ( new String(clusterNameBytes, StandardCharsets.UTF_8)).replace("\0","");
+                businessFileData.put(businessName,businessFileName);
+            }
+        }
+
+        return businessFileData;
+    }
+
     public void writeTableToFile() throws IOException {
         try(RandomAccessFile hashTableFile = new RandomAccessFile("extensibleHashTable", "rw");
             FileChannel hashTableChannel = hashTableFile.getChannel()){
@@ -200,19 +232,16 @@ public class ExtendibleHashTable {
             hashTableBuffer.putInt(size);
             hashTableBuffer.position(0);
             hashTableChannel.write(hashTableBuffer);
-            int indice = 0;
             for (Bin bin: binArray){
-                hashTableBuffer = ByteBuffer.allocate(42);
-                hashTableBuffer.putInt(indice);
-                hashTableBuffer.limit(34);
+                hashTableBuffer = ByteBuffer.allocate(48);
+                hashTableBuffer.limit(40);
                 hashTableBuffer.put(bin.getBinFileName().getBytes(StandardCharsets.UTF_8));
-                hashTableBuffer.limit(42);
-                hashTableBuffer.position(34);
+                hashTableBuffer.limit(48);
+                hashTableBuffer.position(40);
                 hashTableBuffer.putInt(bin.getLocalDepth());
                 hashTableBuffer.putInt(bin.getSize());
                 hashTableBuffer.position(0);
                 hashTableChannel.write(hashTableBuffer);
-                ++indice;
             }
         }
 
@@ -227,42 +256,41 @@ public class ExtendibleHashTable {
             hashTableChannel.read(hashTableBuffer);
             hashTableBuffer.position(0);
             int globalDepth = hashTableBuffer.getInt();
-            int size = hashTableBuffer.get();
+            int size = hashTableBuffer.getInt();
 
-            Bin[] binArray = new Bin[size];
+            Bin[] tempBinArray = new Bin[size];
 
             for ( int i = 0; i < size; i++ ){
                 boolean binAlreadyExists = false;
 
-                hashTableBuffer = ByteBuffer.allocate(42);
+                hashTableBuffer = ByteBuffer.allocate(48);
                 hashTableChannel.read(hashTableBuffer);
                 hashTableBuffer.position(0);
-                int indice = hashTableBuffer.getInt();
-                hashTableBuffer.limit(34);
-                byte[] binFileBytes = new byte[30];
+                hashTableBuffer.limit(40);
+                byte[] binFileBytes = new byte[40];
                 hashTableBuffer.get(binFileBytes);
                 String binFileName = new String(binFileBytes, StandardCharsets.UTF_8).replace("\0", "");
-                hashTableBuffer.limit(42);
-                hashTableBuffer.position(34);
+                hashTableBuffer.limit(48);
+                hashTableBuffer.position(40);
                 int localDepth = hashTableBuffer.getInt();
                 int binSize = hashTableBuffer.getInt();
 
                 for (int j = 0; j < i; j++){
-                    if (binArray[j].getBinFileName().equals(binFileName)){
+                    if (tempBinArray[j].getBinFileName().equals(binFileName)){
                         binAlreadyExists = true;
-                        binArray[i] = binArray[j];
+                        tempBinArray[i] = tempBinArray[j];
                     }
                 }
 
                 if(!binAlreadyExists){
-                    binArray[i] = new Bin(binFileName, localDepth, binSize);
+                    tempBinArray[i] = new Bin(binFileName, localDepth, binSize);
                 }
 
             }
 
             this.globalDepth = globalDepth;
             this.size = size;
-            this.binArray = binArray;
+            this.binArray = tempBinArray;
 
         }
     }

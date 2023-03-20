@@ -1,6 +1,9 @@
 package com.yelp.restaurantFinder;
 
 
+import Loader.ExtendibleHashTable;
+import Loader.ExtendibleHashTableFactory;
+import Loader.LoaderApplication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -8,6 +11,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  * The controller for our application, notably only the root of the web application is used since our front-end
@@ -19,6 +23,11 @@ import java.util.List;
 public class RestaurantFinderController {
 
     List<Review> reviews;
+
+    ExtendibleHashTable eht;
+
+    Set<String> uniqueWords;
+
 
     /**
      * This function will be called whenever a user first visits the website, greets them with a search field.
@@ -43,6 +52,8 @@ public class RestaurantFinderController {
         if ( reviews == null ){
             HashMap<String,Business> businessHashMap = GsonDataRetriever.getBusinessHashMap();
             reviews = GsonDataRetriever.getReviewList(businessHashMap);
+            eht = ExtendibleHashTableFactory.createExtendibleHashTable();
+            uniqueWords = LoaderApplication.poolUniqueWords(reviews);
         }
         List<String> businesses = Similarity.calculation(query.getName(), reviews);
         if (businesses.size() == 2) {
@@ -52,6 +63,9 @@ public class RestaurantFinderController {
             mav.addObject("query", new Query());
             mav.addObject("prevQuery", query);
             mav.addObject("businesses", businesses);
+            ClusterResult clusterResult = new ClusterResult(ClusterFinder.find(query.getName(), uniqueWords, eht));
+            mav.addObject("clusterResult", clusterResult);
+            System.out.println(clusterResult);
             return mav;
         } else{
             ModelAndView mav = new ModelAndView("noResult");
