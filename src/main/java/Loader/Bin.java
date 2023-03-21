@@ -1,5 +1,8 @@
 package Loader;
 
+/**
+ * A container file for business names and their associated file names, Created to minimize rehashing.
+ */
 public class Bin {
 
     private final String binFileName;

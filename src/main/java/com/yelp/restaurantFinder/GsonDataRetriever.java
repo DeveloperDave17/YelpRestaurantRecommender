@@ -186,6 +186,12 @@ public class GsonDataRetriever {
         return readReviewJsonStream(reviewStream, businessHashMap);
     }
 
+    /**
+     * Parses the Json review data to create a hashmap that maps business name to all of its associated reviews.
+     * @param businessHashMap a hashmap containing business id to business.
+     * @return Returns a Hashmap that maps business names to associated review lists
+     * @throws IOException
+     */
     public static HashMap<String, List<Review>> getBusinesstoReviewList(HashMap<String,Business> businessHashMap) throws IOException {
         File theReviewFile = new File("../yelp_academic_dataset_review.json");
         FileInputStream reviewStream = new FileInputStream(theReviewFile);

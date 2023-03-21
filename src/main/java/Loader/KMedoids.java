@@ -30,7 +30,7 @@ public class KMedoids {
 
     /**
      * Creates a KMedoids object with everything necessary to run the simulations
-     * Possible medoids are put into 5 key categories: bars, pizza, breakfast, italian, and asianCuisine.
+     * Possible medoids are put into 5 key categories: bars, american, breakfast, italian, and asianCuisine.
      */
     public KMedoids(ExtendibleHashTable eht, List<Business> businesses, Set<String> uniqueWords){
        this.eht = eht;
@@ -259,6 +259,12 @@ public class KMedoids {
         return businesses.get(random.nextInt(businesses.size()));
     }
 
+    /**
+     * Gets the freqHT for a business from disk using the extensible hashtable created by the loader.
+     * @param business in which a freqHT is desired for.
+     * @return the freqHT for the associated business.
+     * @throws IOException
+     */
     private FreqHT getFreqHT(Business business) throws IOException {
         List<BusinessFileData> businesses =  eht.getBinsInfo(eht.getBin(business.getName()));
         for (BusinessFileData businessFileData: businesses){
@@ -270,6 +276,12 @@ public class KMedoids {
         return new FreqHT();
     }
 
+    /**
+     * Writes cluster lists to file.
+     * @param clusterName the name of the cluster to be stored on disk
+     * @param cluster the list of businesses within the cluster.
+     * @throws IOException
+     */
     private void writeCluster(String clusterName, List<Business> cluster) throws IOException {
         try(RandomAccessFile clusterFile = new RandomAccessFile(clusterName + "_cluster", "rw");
             FileChannel clusterWritingChannel = clusterFile.getChannel()){

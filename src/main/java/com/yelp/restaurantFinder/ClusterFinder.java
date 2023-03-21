@@ -10,6 +10,15 @@ import java.util.Set;
 
 public class ClusterFinder {
 
+    /**
+     * Finds the associated cluster of the business and the most similar ( based on cosine similarity ) business within
+     * the cluster, returns them both within an output string.
+     * @param businessName name of the target business
+     * @param uniqueWords All the unique words tied to review data
+     * @param eht The extensible hashtable mapping business to their file names.
+     * @return A string that contains the cluster of a business and its most similar business within the cluster
+     * @throws IOException
+     */
     public static String find(String businessName, Set<String> uniqueWords, ExtendibleHashTable eht) throws IOException {
 
 
@@ -89,6 +98,13 @@ public class ClusterFinder {
 
     }
 
+    /**
+     * Calculates the cosine similarity between two businesses utilizing already constructed frequency tables.
+     * @param businessA the first business's frequency table
+     * @param businessB the second business's frequency table
+     * @param uniqueWords all the unique words associated with review data
+     * @return a cosine similarity metric
+     */
     public static double cosineSim(FreqHT businessA, FreqHT businessB, Set<String> uniqueWords){
         double magnitudeOfA = 1;
         double magnitudeOfB = 1;

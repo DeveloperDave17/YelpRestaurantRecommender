@@ -10,6 +10,12 @@ import java.util.List;
 
 public class ClusterReader {
 
+    /**
+     * Reads the business names from a specified cluster file, and returns them as a list.
+     * @param clusterName the cluster name which is then parsed into the file name.
+     * @return A list of businesses names associated with the specified cluster.
+     * @throws IOException
+     */
     public static List<String> readCluster(String clusterName) throws IOException {
         try(RandomAccessFile clusterFile = new RandomAccessFile(clusterName + "_cluster", "r");
             FileChannel clusterReadingChannel = clusterFile.getChannel()){
