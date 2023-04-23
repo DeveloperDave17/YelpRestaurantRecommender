@@ -12,7 +12,6 @@ public class ExtendibleHashTableFactory {
     public static ExtendibleHashTable createExtendibleHashTable() throws IOException {
         ExtendibleHashTable hashTable = new ExtendibleHashTable();
         hashTable.readTableFromFile("extensibleHashTable");
-        System.out.println("finished");
         return hashTable;
     }
 }

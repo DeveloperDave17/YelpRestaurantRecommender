@@ -15,7 +15,7 @@ public class FreqHTfactory {
      * @throws IOException
      */
     public static FreqHT loadFreqHT(String fileName) throws IOException {
-        RandomAccessFile freqHTFile = new RandomAccessFile(fileName, "r");
+        RandomAccessFile freqHTFile = new RandomAccessFile("./restaurants/"+fileName, "r");
         FileChannel readingChannel = freqHTFile.getChannel();
         FreqHT theHT = new FreqHT();
         theHT.readTable(readingChannel);

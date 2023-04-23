@@ -50,6 +50,7 @@ public class GsonDataRetriever {
      */
     private static HashMap<String,Business> readBusinessesHM(JsonReader reader) throws IOException {
         List<Business> businesses = new ArrayList<>();
+        List<String> businessNames = new ArrayList<>();
         HashMap<String, Business> businessesMap = new HashMap<>();
 
         while (reader.hasNext()) {
@@ -60,8 +61,9 @@ public class GsonDataRetriever {
         }
 
         for (Business business: businesses){
-            if (business.getReview_count() >= 50 && business.getStars() >= 3 && business.getIsOpen() == 1 ){
+            if (business.getReview_count() >= 50 && business.getStars() >= 3 && business.getIsOpen() == 1 && !businessNames.contains(business.getName())){
                 businessesMap.put(business.getBusiness_id(), business);
+                businessNames.add(business.getName());
                 // Used to enforce a size of 10000 businesses to meet project specifications
                 if ( businessesMap.size() == 10000 )
                     return businessesMap;
@@ -96,12 +98,14 @@ public class GsonDataRetriever {
 
     private static List<Business> readBusinessesL(JsonReader reader) throws IOException {
         List<Business> businesses = new ArrayList<>();
+        List<String> businessNames = new ArrayList<>();
 
         while (reader.hasNext()) {
             Business business = readBusiness(reader);
             if (business.getIsRestaurant() & business.getReview_count() >= 50 && business.getStars() >= 3 &&
-                business.getIsOpen() == 1){
+                business.getIsOpen() == 1 && !businessNames.contains(business.getName())){
                 businesses.add(business);
+                businessNames.add(business.getName());
                 if (businesses.size() == 10000){
                     return businesses;
                 }
