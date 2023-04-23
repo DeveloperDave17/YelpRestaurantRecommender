@@ -1,9 +1,12 @@
 package com.yelp.restaurantFinder;
 
 
+import GraphCreator.Graph;
+import GraphCreator.GraphFactory;
 import Loader.ExtendibleHashTable;
 import Loader.ExtendibleHashTableFactory;
 import Loader.LoaderApplication;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -28,6 +31,17 @@ public class RestaurantFinderController {
 
     Set<String> uniqueWords;
 
+    Graph businessGraph;
+
+    @PostConstruct
+    public void init() throws IOException {
+        HashMap<String,Business> businessHashMap = GsonDataRetriever.getBusinessHashMap();
+        reviews = GsonDataRetriever.getReviewList(businessHashMap);
+        eht = ExtendibleHashTableFactory.createExtendibleHashTable();
+        uniqueWords = LoaderApplication.poolUniqueWords(reviews);
+        businessGraph = GraphFactory.loadGraph();
+    }
+
 
     /**
      * This function will be called whenever a user first visits the website, greets them with a search field.
@@ -49,23 +63,20 @@ public class RestaurantFinderController {
      */
     @PostMapping( value = "/")
     public ModelAndView result(@ModelAttribute Query query) throws IOException {
-        if ( reviews == null ){
-            HashMap<String,Business> businessHashMap = GsonDataRetriever.getBusinessHashMap();
-            reviews = GsonDataRetriever.getReviewList(businessHashMap);
-            eht = ExtendibleHashTableFactory.createExtendibleHashTable();
-            uniqueWords = LoaderApplication.poolUniqueWords(reviews);
-        }
         List<String> businesses = Similarity.calculation(query.getName(), reviews);
+        String traversalResult = businessGraph.shortestPath(query.getName());
         if (businesses.size() == 2) {
-            // Do if results were found
-            ModelAndView mav = new ModelAndView("result");
+            // Do if results were found with a traversal
+            ModelAndView mav = new ModelAndView("resultWithTraversal");
             // sets the user up for another possible query
             mav.addObject("query", new Query());
             mav.addObject("prevQuery", query);
             mav.addObject("businesses", businesses);
             ClusterResult clusterResult = new ClusterResult(ClusterFinder.find(query.getName(), uniqueWords, eht));
             mav.addObject("clusterResult", clusterResult);
-            System.out.println(clusterResult);
+            int disjointCount = businessGraph.numDisjointSets();
+            mav.addObject("disjointSets", new DisjointSets(disjointCount));
+            mav.addObject("graphData", new GraphData(traversalResult));
             return mav;
         } else{
             ModelAndView mav = new ModelAndView("noResult");

@@ -8,10 +8,7 @@ import com.yelp.restaurantFinder.Review;
 import java.io.*;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLockInterruptionException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 public class LoaderApplication {
 
@@ -24,12 +21,19 @@ public class LoaderApplication {
         ExtendibleHashTable businessFilesEHT = new ExtendibleHashTable();
 
         Set<String> uniqueWords = poolUniqueWords(reviews);
-        HashMap<String, List<Review>> businessListHashMap = GsonDataRetriever.getBusinesstoReviewList(businessMap);
+
+        HashMap<String, List<Review>> businessListHashMap = new HashMap<>();
+        for (Review review: reviews){
+            businessListHashMap.computeIfAbsent(review.getBusiness_id(), k -> new ArrayList<>());
+            businessListHashMap.get(review.getBusiness_id()).add(review);
+        }
+
+
         HashMap<String, Integer> uniqueWordWithCounts = uniqueWordToCount(reviews);
 
         for (Business business: businesses) {
             String businessFileName = business.getName().replace(" ", "_").replace("/", "_");
-            try (RandomAccessFile writer = new RandomAccessFile(businessFileName, "rw");
+            try (RandomAccessFile writer = new RandomAccessFile("./restaurants/" + businessFileName, "rw");
                  FileChannel writingChannel = writer.getChannel()) {
 
                 FreqHT textTable = new FreqHT();

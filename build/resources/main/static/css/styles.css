@@ -62,5 +62,9 @@ table, th, td {
 #cluster {
     text-align: center;
     font-size: 24px;
+}
 
+#Dijkstra {
+    text-align: center;
+    font-size: 24px;
 }

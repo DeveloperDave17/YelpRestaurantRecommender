@@ -9,7 +9,6 @@ import java.io.IOException;
 /**
  * This is our Spring Boot application that allows the user to type in their favorite restuarant name and recieve two
  * recommendations based off of our custom similarity metric.
- *
  * @author David Hennigan and Anthony Impellizzeri
  */
 

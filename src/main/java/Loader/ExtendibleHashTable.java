@@ -87,9 +87,9 @@ public class ExtendibleHashTable {
              */
             Bin bin2 = new Bin("bin_" + (bin.hashCode() | (1 << bin.getLocalDepth())), bin.getLocalDepth() + 1, 0);
 
-            try(RandomAccessFile bin1File = new RandomAccessFile(bin.getBinFileName(), "rw");
+            try(RandomAccessFile bin1File = new RandomAccessFile("./bins/" + bin.getBinFileName(), "rw");
                 FileChannel bin1WritingChannel = bin1File.getChannel();
-                RandomAccessFile bin2File = new RandomAccessFile(bin2.getBinFileName(), "rw");
+                RandomAccessFile bin2File = new RandomAccessFile("./bins/" + bin2.getBinFileName(), "rw");
                 FileChannel bin2WritingChannel = bin2File.getChannel()){
                 for (BusinessFileData businessFileData: oldBinBusinesses){
 
@@ -144,7 +144,7 @@ public class ExtendibleHashTable {
 
 
         } else {
-            try(RandomAccessFile binFile = new RandomAccessFile(bin.getBinFileName(), "rw");
+            try(RandomAccessFile binFile = new RandomAccessFile("./bins/" + bin.getBinFileName(), "rw");
                 FileChannel binWritingChannel = binFile.getChannel()){
                 binWritingChannel.position((bin.getSize() * 200L));
                 ByteBuffer binBuffer = ByteBuffer.allocate(200);
@@ -201,7 +201,7 @@ public class ExtendibleHashTable {
 
         List<BusinessFileData> businessFileDataList = new ArrayList<>();
 
-        try(RandomAccessFile binFile = new RandomAccessFile(bin.getBinFileName(), "r");
+        try(RandomAccessFile binFile = new RandomAccessFile("./bins/" + bin.getBinFileName(), "r");
             FileChannel binReadingChannel = binFile.getChannel()){
             for (int i = 0; i < bin.getSize(); i++){
                 ByteBuffer businessBuffer = ByteBuffer.allocate(200);
@@ -239,7 +239,7 @@ public class ExtendibleHashTable {
 
         HashMap<String, String> businessFileData = new HashMap<>();
 
-        try(RandomAccessFile binFile = new RandomAccessFile(bin.getBinFileName(), "r");
+        try(RandomAccessFile binFile = new RandomAccessFile("./bins/" + bin.getBinFileName(), "r");
             FileChannel binReadingChannel = binFile.getChannel()){
             for (int i = 0; i < bin.getSize(); i++){
                 ByteBuffer businessBuffer = ByteBuffer.allocate(200);

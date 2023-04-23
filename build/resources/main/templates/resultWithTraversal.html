@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" href="/css/styles.css">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Result</title>
+</head>
+<body>
+<div id="banner">The Ultimate Food Guide to the Galaxy</div>
+<form id="search" action="#" th:action="@{/}" th:object="${query}" method="post">
+    <input type="text" id="name" th:field="*{name}" placeholder="Restaurant" />
+    <button type="submit">Search</button>
+</form>
+
+
+<table th:object="${businesses}">
+    <thead>
+    <th>Restaurants</th>
+    </thead>
+    <tbody>
+    <tr th:each="business : ${businesses}">
+        <td th:text="${business}"></td>
+    </tr>
+    </tbody>
+</table>
+<p id="cluster" th:object="${clusterResult}" th:text="${clusterResult.clusterInfo}"> </p>
+<p id="Dijkstra"> Dijkstra's Algorithm Results | Number of Disjoint Sets: <span th:object="${disjointSets}" th:text="${disjointSets.count}"></span></p>
+<p id="traversal" th:object="${graphData}" th:text="${graphData.data}"></p>
+</body>
+</html>
